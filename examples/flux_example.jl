@@ -24,9 +24,12 @@ grads = gradient(() -> loss(x, y), θ)
 # η = 0.1 # Learning Rate
 opt = Descent(0.1) # Gradient descent with learning rate 0.1
 
-for p in (W, b)
-  # Flux.Optimise.update!(p, -η * grads[p]) # Can specify your own optimizer
-  Flux.Optimise.update!(opt, p, grads[p])
+for i in 1:10 
+  for p in (W, b)
+    # Flux.Optimise.update!(p, -η * grads[p]) # Can specify your own optimizer
+    Flux.Optimise.update!(opt, p, grads[p])
+  end
+  println("Loss: ", loss(x, y))
 end
 
 println("\nOptimized params: ", θ)
