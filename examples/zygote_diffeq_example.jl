@@ -27,7 +27,7 @@ end
 
 # prob = ODEProblem(physics, u0, tspan, p)
 # sol = solve(prob)
-condition(u,t,integrator) = u[3]<=0
+condition(u,t,integrator) = integrator.u[3]<=0
 affect!(integrator) = terminate!(integrator)
 cb = DiscreteCallback(condition,affect!)
 
@@ -46,14 +46,11 @@ end
 
 
 ## Now let's try to optimize the system to hit a particular point
-# want point (3.0, 0)
+# want point (1.0, 0)
 function loss(vel)
     simulation = predict(vel)
-    
     final_pos = simulation[[1, 3], end]
-
-    # (3.0, 0.0)
-    return (final_pos[1] - 1.0)^2 + final_pos[2]^2
+    return (final_pos[1] - 1.0)^2 + final_pos[2]^2 # x -> 1.0, y -> 0
 end
 
 function plot_loss_surf()
@@ -91,15 +88,8 @@ end
 # Optimize
 function optimize(vel_opt, η)
     for idx in 1:10000
-        grads = ForwardDiff.gradient(s -> loss(s), vel_opt)
+        grads = ForwardDiff.gradient(s -> loss(s), vel_opt) # Magic
         vel_opt .-= η*grads
-
-        if idx % 200 == 0
-            println("idx: ", idx)
-            s = predict(vel_opt)
-            println("loc: ", s[end, [1, 3]])
-            println("loss: ", loss(vel_opt))
-        end
 
         if loss(vel_opt) < 0.1
             break
@@ -113,4 +103,4 @@ end
 # sol = predict([1.0, 0.2]); 
 # v = optimize([1.0, 0.2], 0.1); 
 
-# plot(sol, vars=(1, 3)); plot!(predict(v), vars=(1,3))
+# plot(sol, vars=(1, 3), label="Initial"); plot!(predict(v), vars=(1,3), label="Optimized to land at x=1.0, y=0.0")
