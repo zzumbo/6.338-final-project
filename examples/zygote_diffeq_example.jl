@@ -69,7 +69,7 @@ function plot_loss_surf()
     end
 
     sol_f(x, y) = loss_mat[x, y]
-    plot(1:length(v_x), 1:length(v_y), sol_f, st=:surf, camera=(-30,30), color=:viridis)
+    plot(1:length(v_x), 1:length(v_y), sol_f, st=:surf, color=:viridis)
 
 end
 

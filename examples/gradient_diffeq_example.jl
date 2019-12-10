@@ -20,6 +20,6 @@ end
 
 @info("Running forwarddiff")
 # G([1.5,1.0,3.0])
-res2 = ForwardDiff.gradient(G,[1.5,1.0,3.0])
+es2 = ForwardDiff.gradient(G,[1.5,1.0,3.0])
 # using Zygote
 # Zygote.gradient(G,[1.5,1.0,3.0])
