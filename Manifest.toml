@@ -617,6 +617,12 @@ git-tree-sha1 = "035f8d60ba2a22cb1d2580b1e0e5ce0cb05e4563"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
 version = "0.9.10"
 
+[[ParameterizedFunctions]]
+deps = ["DataStructures", "DiffEqBase", "LinearAlgebra", "SymEngine"]
+git-tree-sha1 = "4ddf66140e4a0fbf66610da9e6a1cb24a8d57580"
+uuid = "65888b18-ceab-5e60-b2b9-181511a3b968"
+version = "4.2.1"
+
 [[Parameters]]
 deps = ["OrderedCollections"]
 git-tree-sha1 = "1dfd7cd50a8eb06ef693a4c2bbe945943cd000c5"
