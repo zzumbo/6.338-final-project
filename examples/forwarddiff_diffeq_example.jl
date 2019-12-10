@@ -19,13 +19,7 @@ function physics(u, p, t)
     [dx, ddx, dy, ddy]
 end
 
-# # Simply roll this forward in time and we get our solution
-# u0 = [0.0, 10.0, 1.0, 1.0]
-# tspan = (0.0, 2.0)
-# p = [9.8, 0.0]
-
-# prob = ODEProblem(physics, u0, tspan, p)
-# sol = solve(prob)
+# Callback
 condition(u,t,integrator) = integrator.u[3]<=0
 affect!(integrator) = terminate!(integrator)
 cb = DiscreteCallback(condition,affect!)
@@ -43,7 +37,6 @@ function predict(vel)
     sol
 end
 
-
 ## Now let's try to optimize the system to hit a particular point
 # want point (1.0, 0)
 function loss(vel)
@@ -52,8 +45,8 @@ function loss(vel)
     return (final_pos[1] - 1.0)^2 + final_pos[2]^2 # x -> 1.0, y -> 0
 end
 
+# Plots loss surface over velocities in x and y
 function plot_loss_surf()
-
     v_x = 0.0:0.01:3 
     v_y = 0.0:0.01:2
 
@@ -69,7 +62,7 @@ function plot_loss_surf()
 
 end
 
-
+# Plots loss over just x velocities
 function plot_loss_x()
 
     v_x = 0.05:0.01:3 
@@ -84,7 +77,7 @@ function plot_loss_x()
 end
 
 
-# Optimize
+# Optimize the xy velocities needed
 function optimize(vel_opt, η)
     for idx in 1:10000
         grads = ForwardDiff.gradient(s -> loss(s), vel_opt) # Magic
