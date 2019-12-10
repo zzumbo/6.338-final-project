@@ -1,5 +1,4 @@
 using DifferentialEquations
-using Zygote
 using LinearAlgebra
 using Plots
 using ForwardDiff
