@@ -33,6 +33,7 @@ A = zeros(N,N)
 generateStencil!(A, N, Δx)
 u0 = u0_func(x)
 
+
 function heat_eq(u, p, t)
     du = A * u + f(t, u)
     du 

@@ -20,9 +20,12 @@ function physics(u, p, t)
 end
 
 # Callback
-condition(u,t,integrator) = integrator.u[3]<=0
+condition_cont(u,t,integrator) = u[3]
+condition(u,t,integrator) = u[3]<=0
 affect!(integrator) = terminate!(integrator)
 cb = DiscreteCallback(condition,affect!)
+# cb = ContinuousCallback(condition_cont,nothing,affect!)
+
 
 #Lets wrap this into a "predict" method
 function predict(vel)
@@ -42,7 +45,8 @@ end
 function loss(vel)
     simulation = predict(vel)
     final_pos = simulation[[1, 3], end]
-    return (final_pos[1] - 1.0)^2 + final_pos[2]^2 # x -> 1.0, y -> 0
+    l = (final_pos[1] - 1.0)^2 + final_pos[2]^2 # x -> 1.0, y -> 0
+    return l
 end
 
 # Plots loss surface over velocities in x and y
@@ -57,8 +61,9 @@ function plot_loss_surf()
         end
     end
 
-    sol_f(x, y) = loss_mat[x, y]
-    plot(1:length(v_x), 1:length(v_y), sol_f, st=:surf, color=:viridis)
+    # sol_f(x, y) = loss_mat[x, y]
+    # plot(1:length(v_x), 1:length(v_y), sol_f, st=:surf, color=:viridis)
+    plot(loss_mat, st=:heatmap, color=:viridis)
 
 end
 
@@ -79,7 +84,7 @@ end
 
 # Optimize the xy velocities needed
 function optimize(vel_opt, η)
-    for idx in 1:10000
+    for idx in 1:1000
         grads = ForwardDiff.gradient(s -> loss(s), vel_opt) # Magic
         vel_opt .-= η*grads
 
@@ -91,8 +96,10 @@ function optimize(vel_opt, η)
     vel_opt
 end
 
-# # Example run of optimize
-# sol = predict([1.0, 0.2]); 
-# v = optimize([1.0, 0.2], 0.1); 
+# Example run of optimize
+p = [1.0, 0.4]
+init_sol = predict(p); 
+v = optimize(p, 0.01); 
+final_sol = predict(v);
 
-# plot(sol, vars=(1, 3), label="Initial"); plot!(predict(v), vars=(1,3), label="Optimized to land at x=1.0, y=0.0")
+plot(init_sol, vars=(1, 3), label="Initial"); plot!(final_sol, vars=(1,3), label="Optimized to land at x=1.0, y=0.0")

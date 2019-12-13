@@ -25,7 +25,7 @@ end
 A = A/(Δx^2)
 U = A\B
 
-plot([0;x;1],[0;U;0],label="U")
-plot!([0; x; 1], [0; true_u(x); 0], label="Analytical")
+display(plot([0;x;1],[0;U;0],label="U"))
+display(plot!([0; x; 1], [0; true_u(x); 0], label="Analytical"))
 
 
