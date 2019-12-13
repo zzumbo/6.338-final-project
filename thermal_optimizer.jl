@@ -36,19 +36,27 @@ generateStencil!(A, N, Δx)
 f(u, p, t)  = zeros(size(u))  
 # u0_func(x) = sin.(2π * x)
 
-# Given x coord of components, give initial conditions that are equiv to a box around that coordinate
+# Given x coord of components, give initial conditions that are equiv to a gaussian around that coordinate
 function gen_u0(positions)
     out_vec = zeros(size(x))
-    c_sz = Int(floor(0.1*length(x)/2))
     for pos in positions
-        pos_idx = Int(floor(pos))
-        for i=(pos_idx-c_sz):(pos_idx+c_sz)
-            # display(i)
-            out_vec[i] += 1
-        end
+        out_vec += gaussian.(x, pos, 1.0)
     end
-    # display(out_vec)
     out_vec
+end
+
+
+function gaussian(x, mu, sig)
+    return exp(-(x - mu)^2.0) / (2 * sig^2.0)
+end
+
+function box(x, pos)
+    sz = 5.0
+    if pos-sz <= x <= pos+sz 
+        return 1.0
+    else 
+        return 0.0
+    end
 end
 
 
@@ -91,6 +99,8 @@ function optimize(positions, η=0.1)
     @showprogress for idx in 1:1000
         grads = ForwardDiff.gradient(s -> loss(s), positions) # Magic
         positions .-= η*grads
+        display(positions)
+        display(loss(positions))
 
         if loss(positions) < 0.1
             break
