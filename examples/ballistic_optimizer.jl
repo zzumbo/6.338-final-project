@@ -90,7 +90,7 @@ function optimize(vel_opt, η)
         grads = ForwardDiff.gradient(s -> loss(s), vel_opt) # Magic
         vel_opt .-= η*grads
 
-        if loss(vel_opt) < 0.001
+        if loss(vel_opt) < 0.00001
             break
         end
     end

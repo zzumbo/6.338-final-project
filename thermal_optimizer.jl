@@ -40,6 +40,7 @@ f(u, p ,t) = gen_u0(p)
 # Given x coord of components, give initial conditions that are equiv to a gaussian around that coordinate
 function gen_u0(positions)
     out_vec = zeros(size(x))
+    out_vec = convert.(eltype(positions),out_vec)
     for pos in positions
         out_vec += gaussian.(x, pos, 5.0)
     end
@@ -71,11 +72,13 @@ end
 function predict(positions)
     # Simply roll this forward in time and we get our solution
     tspan = (0.0, 1.0)
+    # tspan_dual = convert.(eltype(positions),tspan)
     # @show typeof(positions)
     # u₀ = gen_u0(positions)
     u₀ = zeros(size(x))
+    u_dual = convert.(eltype(positions),u₀)
     # @show typeof(u₀)
-    prob = ODEProblem(heat_eq, u₀, tspan, positions)
+    prob = ODEProblem(heat_eq, u_dual, tspan, positions)
     sol = solve(prob)
     # @show typeof(sol[end])
 
