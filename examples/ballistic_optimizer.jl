@@ -2,6 +2,7 @@ using DifferentialEquations
 using LinearAlgebra
 using Plots
 using ForwardDiff
+using ProgressMeter
 
 # 2D Ball Example
 function physics(u, p, t)
@@ -23,18 +24,19 @@ end
 condition_cont(u,t,integrator) = u[3]
 condition(u,t,integrator) = u[3]<=0
 affect!(integrator) = terminate!(integrator)
-cb = DiscreteCallback(condition,affect!)
-# cb = ContinuousCallback(condition_cont,nothing,affect!)
+# cb = DiscreteCallback(condition,affect!)
+cb = ContinuousCallback(condition_cont,nothing,affect!)
 
 
 #Lets wrap this into a "predict" method
 function predict(vel)
     # Simply roll this forward in time and we get our solution
     tspan = (0.0, 10.0)
+    tspan_dual = convert.(eltype(vel),tspan)
     p = [9.8, 0.0]
 
     start_state = [0.0, vel[1], 10.0, vel[2]]
-    prob = ODEProblem(physics, start_state, tspan, p)
+    prob = ODEProblem(physics, start_state, tspan_dual, p)
     sol = solve(prob, callback=cb)
 
     sol
@@ -84,11 +86,11 @@ end
 
 # Optimize the xy velocities needed
 function optimize(vel_opt, η)
-    for idx in 1:1000
+    @showprogress for idx in 1:1000
         grads = ForwardDiff.gradient(s -> loss(s), vel_opt) # Magic
         vel_opt .-= η*grads
 
-        if loss(vel_opt) < 0.1
+        if loss(vel_opt) < 0.001
             break
         end
     end
@@ -97,9 +99,9 @@ function optimize(vel_opt, η)
 end
 
 # Example run of optimize
-p = [1.0, 0.4]
+p = [1.0, 0.2]
 init_sol = predict(p); 
-v = optimize(p, 0.01); 
+v = optimize(p, 0.2); 
 final_sol = predict(v);
 
-plot(init_sol, vars=(1, 3), label="Initial"); plot!(final_sol, vars=(1,3), label="Optimized to land at x=1.0, y=0.0")
+display(plot(init_sol, vars=(1, 3), label="Initial")); display(plot!(final_sol, vars=(1,3), label="Optimized to land at x=1.0, y=0.0"))
