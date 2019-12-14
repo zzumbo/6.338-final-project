@@ -6,7 +6,7 @@ using ProgressMeter
 
 # Thermal Model
 
-function generateStencil!(A, N, Δx)
+function generate1DStencil!(A, N, Δx)
     # Generate the centered difference matrix manually
     for i in 1:N, j in 1:N
 
@@ -22,6 +22,16 @@ function generateStencil!(A, N, Δx)
     A = A/(Δx^2)
 end
 
+function double_partial(x)
+    dx = zeros(size(x))
+    for i in 2:length(dx)-1
+      dx[i] = -1*x[i-1] + 2*x[i] + -1*x[i+1]
+    end
+    dx[1] = 2*x[1] + -1*x[2]
+    dx[end] = -1*x[end-1] + 2*x[end]
+    dx
+end
+
 # Discretize in time and space
 Δx = 1
 x = Δx:Δx:100-Δx # Solve only for the interior: the endpoints are known to be zero!
@@ -31,14 +41,14 @@ t = Δt:Δt:1000-Δt # Solve only for the interior: the endpoints are known to b
 
 N = length(x)
 A = zeros(N,N)
-generateStencil!(A, N, Δx)
+generate1DStencil!(A, N, Δx)
 
 # f(u, p, t) = zeros(size(u)) 
-f(u, p, t) = gen_u0(p) 
+f(u, p, t) = gen_forcing(p) 
 # u0_func(x) = sin.(2π * x)
 
 # Given x coord of components, give initial conditions that are equiv to a gaussian around that coordinate
-function gen_u0(positions)
+function gen_forcing(positions)
     out_vec = zeros(size(x))
     out_vec = convert.(eltype(positions),out_vec)
     for pos in positions
@@ -74,7 +84,7 @@ function predict(positions)
     tspan = (0.0, 1.0)
     # tspan_dual = convert.(eltype(positions),tspan)
     # @show typeof(positions)
-    # u₀ = gen_u0(positions)
+    # u₀ = gen_forcing(positions)
     u₀ = zeros(size(x))
     u_dual = convert.(eltype(positions),u₀)
     # @show typeof(u₀)
@@ -142,4 +152,48 @@ end
 
 function plt_1D(sol)
     display(plot(sol[end]))
+end
+
+function plt_1D_w_pos(sol, positions)
+    display(plot(sol[end], 
+                 linewidth=5,
+                 xlabel="Position (meters)",
+                 ylabel="Temperature",
+                 label="Component positions at " * first(string(positions[1]),4) * " and " * first(string(positions[2]),4)))
+end
+
+function optimize_and_save_thermal(positions, η=0.1)
+    solns = []
+    append!(solns, [deepcopy(positions)])
+    @showprogress for idx in 1:1000
+        grads = ForwardDiff.gradient(s -> loss(s), positions) # Magic
+        positions .-= η*grads
+        # display(positions)
+        # display(loss(positions))
+
+        if loss(positions) < 0.1
+            break
+        end
+
+        if idx in [500,1000]
+            append!(solns, [deepcopy(positions)])
+        end
+    end
+
+    solns
+end
+
+function test_and_save_thermal()
+    p = [25.0, 30.0]
+    solns = optimize_and_save_thermal(p)
+    display(plot())
+    i = 1
+    idxs = [1,500,1000]
+    for pos in solns
+        sol = predict(pos)
+        plt_1D_w_pos(sol, pos)
+        plot!(title="1D Thermal Optimizer: Iteration " * string(idxs[i]), ylims = (0.0,2.0))
+        png("thermal_plot_"*string(i))
+        i += 1
+    end
 end

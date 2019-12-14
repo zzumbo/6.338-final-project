@@ -22,7 +22,7 @@ end
 
 # Callback
 condition_cont(u,t,integrator) = u[3]
-condition(u,t,integrator) = u[3]<=0
+# condition(u,t,integrator) = u[3]<=0
 affect!(integrator) = terminate!(integrator)
 # cb = DiscreteCallback(condition,affect!)
 cb = ContinuousCallback(condition_cont,nothing,affect!)
@@ -98,10 +98,48 @@ function optimize(vel_opt, η)
     vel_opt
 end
 
-# Example run of optimize
-p = [1.0, 0.2]
-init_sol = predict(p); 
-v = optimize(p, 0.2); 
-final_sol = predict(v);
+function optimize_and_save(vel_opt, η)
+    solns = []
+    for idx in 1:1000
+        if idx % 10 == 1
+            append!(solns, [deepcopy(vel_opt)])    
+            # @show idx
+            # @show vel_opt
+            # @show solns
+        end
 
-display(plot(init_sol, vars=(1, 3), label="Initial")); display(plot!(final_sol, vars=(1,3), label="Optimized to land at x=1.0, y=0.0"))
+        grads = ForwardDiff.gradient(s -> loss(s), vel_opt) # Magic
+        vel_opt .-= η*grads
+
+        if loss(vel_opt) < 0.00001
+            break
+        end
+
+    end
+    display(solns)
+    solns
+end
+
+# Example run of optimize
+function run_test()
+    p = [1.0, 0.2]
+    init_sol = predict(p); 
+    v = optimize(p, 0.2); 
+    final_sol = predict(v);
+
+    display(plot(init_sol, vars=(1, 3), label="Initial")); display(plot!(final_sol, vars=(1,3), label="Optimized to land at x=1.0, y=0.0"))
+end
+
+function run_and_save()
+    p = [2.0, 0.4]
+    vs = optimize_and_save(p, 0.03); 
+    display(plot(title="Ballistic Optimizer: Goal final position (1.0, 0.0)",
+                 xlabel="x distance (meters)",
+                 ylabel="y distance (meters)",
+                 color=:viridis))
+    i = 0
+    for v in vs 
+        display(plot!(predict(v), vars=(1,3), label="Iteration " * string(i)))
+        i += 10
+    end
+end
