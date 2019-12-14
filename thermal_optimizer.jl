@@ -34,7 +34,7 @@ A = zeros(N,N)
 generateStencil!(A, N, Δx)
 
 # f(u, p, t) = zeros(size(u)) 
-f(u, p ,t) = gen_u0(p) 
+f(u, p, t) = gen_u0(p) 
 # u0_func(x) = sin.(2π * x)
 
 # Given x coord of components, give initial conditions that are equiv to a gaussian around that coordinate
@@ -99,7 +99,7 @@ end
 
 
 # Gradient Descent: Optimize initial positions
-function optimize(positions, η=0.1)
+function optimize(positions, η=0.1; plt=false)
     
     @showprogress for idx in 1:1000
         grads = ForwardDiff.gradient(s -> loss(s), positions) # Magic
@@ -109,6 +109,11 @@ function optimize(positions, η=0.1)
 
         if loss(positions) < 0.1
             break
+        end
+
+        if plt
+            sol = predict(positions)
+            plt_sol(sol)
         end
     end
 
@@ -131,8 +136,10 @@ end
 # optimize([25.0, 30.0])
 
 function plt_sol(sol)
-
     sol_f(t, x) = sol[t, x]
-    plot(1:length(sol[end]), 1:length(sol.t), sol_f, st=:surface, color=:viridis)
+    display(plot(1:length(sol[end]), 1:length(sol.t), sol_f, st=:surface, color=:viridis))
+end
 
+function plt_1D(sol)
+    display(plot(sol[end]))
 end
