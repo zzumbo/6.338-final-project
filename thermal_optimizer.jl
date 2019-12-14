@@ -33,21 +33,22 @@ N = length(x)
 A = zeros(N,N)
 generateStencil!(A, N, Δx)
 
-f(u, p, t)  = zeros(size(u))  
+# f(u, p, t) = zeros(size(u)) 
+f(u, p ,t) = gen_u0(p) 
 # u0_func(x) = sin.(2π * x)
 
 # Given x coord of components, give initial conditions that are equiv to a gaussian around that coordinate
 function gen_u0(positions)
     out_vec = zeros(size(x))
     for pos in positions
-        out_vec += gaussian.(x, pos, 1.0)
+        out_vec += gaussian.(x, pos, 5.0)
     end
     out_vec
 end
 
 
 function gaussian(x, mu, sig)
-    return exp(-(x - mu)^2.0) / (2 * sig^2.0)
+    return exp(-(x - mu)^2.0 / (2 * sig^2.0)) 
 end
 
 function box(x, pos)
@@ -71,7 +72,8 @@ function predict(positions)
     # Simply roll this forward in time and we get our solution
     tspan = (0.0, 1.0)
     # @show typeof(positions)
-    u₀ = gen_u0(positions)
+    # u₀ = gen_u0(positions)
+    u₀ = zeros(size(x))
     # @show typeof(u₀)
     prob = ODEProblem(heat_eq, u₀, tspan, positions)
     sol = solve(prob)
@@ -99,8 +101,8 @@ function optimize(positions, η=0.1)
     @showprogress for idx in 1:1000
         grads = ForwardDiff.gradient(s -> loss(s), positions) # Magic
         positions .-= η*grads
-        display(positions)
-        display(loss(positions))
+        # display(positions)
+        # display(loss(positions))
 
         if loss(positions) < 0.1
             break
@@ -124,3 +126,10 @@ function plot_loss_surf()
 end
     
 # optimize([25.0, 30.0])
+
+function plt_sol(sol)
+
+    sol_f(t, x) = sol[t, x]
+    plot(1:length(sol[end]), 1:length(sol.t), sol_f, st=:surface, color=:viridis)
+
+end
