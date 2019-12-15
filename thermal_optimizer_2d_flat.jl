@@ -4,13 +4,15 @@ using Plots
 using ForwardDiff
 using ProgressMeter
 using DSP
+using Serialization
 
 N = 4
 A = zeros(N,N)
 
-xs = 1.0:100.0
-ys = 1.0:100.0
+xs = 1.0:30.0
+ys = 1.0:30.0
 x = zeros(length(xs),length(ys))
+positions = [10.0,10.0,13.0,13.0] # Two components, one at (20.0,30.0) and one at (30.0,40.0)
 
 stencil = [0.0  1.0 0.0; 
            1.0 -4.0 1.0; 
@@ -49,6 +51,34 @@ function double_partial_2D(x)
     du
 end
 
+x = reshape(collect(1.0:16.0),(4,4))
+
+function double_partial_2D_manual(x)
+    nx = zeros(size(x))
+    nx = convert.(eltype(x[1,1]),nx)
+
+    for i=1:size(x,1)
+        for j=1:size(x,2)
+            nx[i,j] += conv_helper(i,j,x,stencil)
+        end
+    end
+    nx
+end
+
+function conv_helper(i,j,x,stencil)
+    val = 0
+    for dx=-1:1
+        for dy=-1:1
+            ni = i+dx
+            nj = j+dy
+            if 1 <= ni <= size(x,1) && 1 <= nj <= size(x,2)
+                val += x[ni,nj] * stencil[dx+2,dy+2]
+            end
+        end
+    end
+    val
+end
+
 f(u, p, t) = gen_forcing_2D(p) 
 
 function gen_forcing_2D(positions)
@@ -57,7 +87,7 @@ function gen_forcing_2D(positions)
 end
 
 function heat_eq(u, p, t)
-    du = double_partial_2D(u) + f(u,p,t)
+    du = double_partial_2D_manual(u) + f(u,p,t)
     du 
 end
 
@@ -76,8 +106,8 @@ function gaussian_2D_multipos(loc, positions, sig)
     x, y = loc
     σ₁, σ₂ = sig
     val = 0
-    for pos in positions
-        x₀, y₀ = pos
+    for i=1:2:length(positions)
+        x₀, y₀ = positions[i], positions[i+1]
         val += gaussian(x, x₀, σ₁) * gaussian(y, y₀, σ₂)
     end
     val
@@ -96,7 +126,7 @@ end
 function predict(positions)
     # Simply roll this forward in time and we get our solution
     tspan = (0.0, 1.0)
-    u₀ = zeros(size(x))
+    u₀ = zeros(size(xs,1),size(ys,1))
     u_dual = convert.(eltype(positions[1]),u₀)
     prob = ODEProblem(heat_eq, u_dual, tspan, positions)
     sol = solve(prob)
@@ -169,7 +199,7 @@ function optimize_and_save_thermal(positions, η=0.1)
     solns = []
     append!(solns, [deepcopy(positions)])
     @showprogress for idx in 1:1000
-        grads = ForwardDiff.gradient(s -> loss(s), positions) # Magic
+        grads = ForwardDiff.gradient(loss, positions) # Magic
         positions .-= η*grads
         # display(positions)
         # display(loss(positions))
@@ -178,10 +208,43 @@ function optimize_and_save_thermal(positions, η=0.1)
             break
         end
 
-        if idx in [500,1000]
-            append!(solns, [deepcopy(positions)])
-        end
+        append!(solns, [deepcopy(positions)])
+
     end
 
     solns
+end
+
+
+function test_solns()
+    init_pos = [10.0,10.0,13.0,13.0]
+    ps = optimize_and_save_thermal(init_pos)
+    serialize("positions.bin", ps)
+
+    # @gif for positions in ps
+    #     gm = create_2D_gaussian_matrix(xs,ys,positions)
+    #     plot(1:size(gm,1), 1:size(gm,2), gm, st=:heatmap, color=:viridis)
+    # end
+
+end
+
+function plot_intermediates()
+    ps = deserialize("positions.bin")
+    ints = []
+    for j=1:100:1001 
+        append!(ints, [ps[j]])
+    end
+    
+    i = 0
+    for positions in ints
+        gm = create_2D_gaussian_matrix(xs,ys,positions)
+        display(plot(1:size(gm,1), 1:size(gm,2), gm, 
+                st=:heatmap, 
+                color=:viridis, 
+                title="Thermal Optimizer Iteration "*string(i*100), 
+                xlabel="x position (meters)", 
+                ylabel="y position (meters)"))
+        savefig("final_project/plots/thermal_2D_plots/thermal_2D_plot_"*string(i))
+        i += 1
+    end
 end
