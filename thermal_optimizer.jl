@@ -53,6 +53,7 @@ function gen_forcing(positions)
     out_vec = convert.(eltype(positions),out_vec)
     for pos in positions
         out_vec += gaussian.(x, pos, 5.0)
+        # out_vec += box.(x, pos)
     end
     out_vec
 end
@@ -193,7 +194,7 @@ function test_and_save_thermal()
         sol = predict(pos)
         plt_1D_w_pos(sol, pos)
         plot!(title="1D Thermal Optimizer: Iteration " * string(idxs[i]), ylims = (0.0,2.0))
-        png("thermal_plot_"*string(i))
+        savefig("plots/thermal_plot_"*string(i))
         i += 1
     end
 end
