@@ -19,7 +19,7 @@ end
 
 # Semi-linear heat equation: $u_t = \delta u + f$
 f(t, u)  = zeros(size(u)) #ones(size(x,1)) - .5u 
-u0_func(x) = sin.(2π * x)
+u0_func(x) = if (0.4 < x < 0.6) 1.0 else 0.0 end
 
 # Discretize in time and space
 Δx = 0.01
@@ -31,7 +31,7 @@ t = Δt:Δt:1-Δt # Solve only for the interior: the endpoints are known to be z
 N = length(x)
 A = zeros(N,N)
 generateStencil!(A, N, Δx)
-u0 = u0_func(x)
+u0 = u0_func.(x)
 
 
 function heat_eq(u, p, t)
@@ -45,5 +45,11 @@ function solve_prob(tmax)
     sol = solve(prob, tstops=t)
 
     sol_f(t, x) = sol[t, x]
-    plot(1:length(x), 1:length(t), sol_f, st=:surface, color=:viridis)
+    plot(1:length(x), 1:length(t), (t, x) -> sol[t, x], 
+        title="Thermal Evolution of Box centered at 0.5",
+        xlabel="Position Bins", 
+        ylabel="Time Bins",
+        st=:heatmap, 
+        color=:viridis)
+    savefig("plots/heat_example.png")
 end

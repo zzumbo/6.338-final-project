@@ -134,12 +134,21 @@ function run_and_save()
     p = [2.0, 0.4]
     vs = optimize_and_save(p, 0.03); 
     display(plot(title="Ballistic Optimizer: Goal final position (1.0, 0.0)",
-                 xlabel="x distance (meters)",
-                 ylabel="y distance (meters)",
-                 color=:viridis))
+                 xlabel="x distance [m]",
+                 ylabel="y distance [m]"))
     i = 0
     for v in vs 
-        display(plot!(predict(v), vars=(1,3), label="Iteration " * string(i)))
+        display(
+            plot!(predict(v), 
+                vars=(1,3), 
+                label="Iteration " * string(i),
+                color=:Blues,
+                colorbar=:none,
+                legend=:bottomleft,
+                line_z=i+1)
+            )
         i += 10
     end
+
+    savefig("plots/ballistic_example.png")
 end
