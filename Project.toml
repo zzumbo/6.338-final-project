@@ -1,4 +1,5 @@
 [deps]
+DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
 DiffEqOperators = "9fdde737-9c7f-55bf-ade8-46b3f136cc48"
 DiffEqPDEBase = "34035eb4-37db-58ae-b003-a3202c898701"
 DiffEqProblemLibrary = "a077e3f3-b75c-5d7f-a0c6-6bc4c8ec64a9"

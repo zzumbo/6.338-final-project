@@ -169,6 +169,12 @@ git-tree-sha1 = "e99db1397ce85975203a9d736ab37534730996ca"
 uuid = "3a865a2d-5b23-5a0f-bc46-62713ec82fae"
 version = "1.5.0"
 
+[[DSP]]
+deps = ["FFTW", "LinearAlgebra", "Polynomials", "Random", "Reexport", "SpecialFunctions", "Statistics"]
+git-tree-sha1 = "fa9564dc41fb91716c2e3353fe447f268a08f14d"
+uuid = "717857b8-e6f2-59f4-9121-6e50c889abd2"
+version = "0.6.2"
+
 [[DataAPI]]
 git-tree-sha1 = "674b67f344687a88310213ddfa8a2b3c76cc4252"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"

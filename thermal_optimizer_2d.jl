@@ -68,8 +68,11 @@ function gaussian(x, mu, sig)
     return exp(-(x - mu)^2.0 / (2 * sig^2.0)) 
 end
 
-function gaussian_2D(x, y, x₀, y₀, σ₁, σ₂)
-    return exp(-( (x-x₀)^2.0/(2.0*σ₁^2) + (y-y₀)^2.0/(2.0*σ₂^2.0) ) )
+function gaussian_2D(loc, mu, sig)
+    x, y = loc
+    x₀, y₀ = mu
+    σ₁, σ₂ = sig
+    return gaussian(x, x₀, σ₁) * gaussian(y, y₀, σ₂)
 end
 
 function create_2D_gaussian_matrix(xs,ys,positions)
@@ -82,7 +85,7 @@ function create_2D_gaussian_matrix(xs,ys,positions)
         x_p, y_p = pos
         for x in xs
             for y in ys
-                out[x_idx, y_idx] += gaussian_2D(x,y,x_p,y_p,5.0,5.0)
+                out[x_idx, y_idx] += gaussian_2D([x,y],[x_p,y_p],[5.0,5.0])
                 y_idx += 1
             end
             y_idx = 1
@@ -100,5 +103,5 @@ function plot_gaussian()
     ys = 1.0:100.0
     gm = create_2D_gaussian_matrix(xs,ys,positions)
     gm_f(x, y) = gm[x, y]
-    display(plot(1:length(xs), 1:length(ys), gm_f, st=:surface, color=:viridis))
+    display(plot(1:length(xs), 1:length(ys), gm_f, st=:heatmap, color=:viridis))
 end
