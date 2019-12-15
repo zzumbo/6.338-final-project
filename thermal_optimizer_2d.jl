@@ -75,6 +75,33 @@ function gaussian_2D(loc, mu, sig)
     return gaussian(x, x₀, σ₁) * gaussian(y, y₀, σ₂)
 end
 
+# Loss: Given a list of positions, what is the cost / loss of the 
+function loss(positions)
+    simulation = predict(positions)
+    # display(simulation)
+    final_state = simulation[end]
+    # display(size(final_state)[1])
+    # display(final_state)
+    return norm(final_state, 2)
+end
+
+function predict(positions)
+    # Simply roll this forward in time and we get our solution
+    tspan = (0.0, 1.0)
+    # tspan_dual = convert.(eltype(positions),tspan)
+    # @show typeof(positions)
+    # u₀ = gen_forcing(positions)
+    u₀ = zeros(size(x))
+    u_dual = convert.(eltype(positions),u₀)
+    # @show typeof(u₀)
+    prob = ODEProblem(heat_eq, u_dual, tspan, positions)
+    sol = solve(prob)
+    # @show typeof(sol[end])
+
+    # display("Finished ODE Solve")
+    sol
+end
+
 function create_2D_gaussian_matrix(xs,ys,positions)
     out = zeros(size(xs)[1],size(ys)[1])
     out = convert.(eltype(positions[1]),out)
@@ -104,4 +131,25 @@ function plot_gaussian()
     gm = create_2D_gaussian_matrix(xs,ys,positions)
     gm_f(x, y) = gm[x, y]
     display(plot(1:length(xs), 1:length(ys), gm_f, st=:heatmap, color=:viridis))
+end
+
+function optimize_and_save_thermal(positions, η=0.1)
+    solns = []
+    append!(solns, [deepcopy(positions)])
+    @showprogress for idx in 1:1000
+        grads = ForwardDiff.gradient(s -> loss(s), positions) # Magic
+        positions .-= η*grads
+        # display(positions)
+        # display(loss(positions))
+
+        if loss(positions) < 0.1
+            break
+        end
+
+        if idx in [500,1000]
+            append!(solns, [deepcopy(positions)])
+        end
+    end
+
+    solns
 end
