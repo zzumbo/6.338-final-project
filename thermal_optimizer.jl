@@ -148,7 +148,14 @@ end
 
 function plt_sol(sol)
     sol_f(t, x) = sol[t, x]
-    display(plot(1:length(sol[end]), 1:length(sol.t), sol_f, st=:surface, color=:viridis))
+    display(plot(1:length(sol[end]), 
+            1:length(sol.t), 
+            sol_f, 
+            st=:surface, 
+            color=:viridis,
+            xlabel="Position",
+            ylabel="Time (sec)",
+            title="1D Temperature Over Time"))
 end
 
 function plt_1D(sol)

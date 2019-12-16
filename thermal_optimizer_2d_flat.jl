@@ -188,9 +188,10 @@ function plot_heatmap(data)
 end
 
 function plot_gaussian_2()
-    positions = [[20.0,30.0],[40.0,50.0],[66.0,3.3]]
-    xs = 1.0:0.5:100.0
-    ys = 1.0:0.5:100.0
+    # positions = [20.0,30.0,40.0,50.0,66.0,3.3]
+    positions = [-3.46019, 1.13722, 12.5033, 20.4116, 35.1203, 5.80054]
+    xs = 1.0:0.5:30.0
+    ys = 1.0:0.5:30.0
     gf = (x,y) -> gaussian_2D_multipos([x,y],positions,[5.0,5.0])
     display(plot(xs, ys, gf, st=:heatmap, color=:viridis))
 end
@@ -198,7 +199,7 @@ end
 function optimize_and_save_thermal(positions, η=0.1)
     solns = []
     append!(solns, [deepcopy(positions)])
-    @showprogress for idx in 1:1000
+    @showprogress for idx in 1:100
         grads = ForwardDiff.gradient(loss, positions) # Magic
         positions .-= η*grads
         # display(positions)
@@ -217,13 +218,16 @@ end
 
 
 function test_solns()
-    init_pos = [10.0,10.0,13.0,13.0]
-    ps = optimize_and_save_thermal(init_pos)
+    init_pos = [10.0,10.0,13.0,13.0,20.0,10.0,20.0,20.0]
+    @time ps = optimize_and_save_thermal(init_pos, 0.5)
     serialize("positions.bin", ps)
 
-    # @gif for positions in ps
-    #     gm = create_2D_gaussian_matrix(xs,ys,positions)
-    #     plot(1:size(gm,1), 1:size(gm,2), gm, st=:heatmap, color=:viridis)
+    # display("Creating gif")
+    # @gif for pos in ps
+    #     # gm = create_2D_gaussian_matrix(xs,ys,pos)
+    #     display(pos)
+    #     sol = predict(pos)[end]
+    #     plot(1:size(sol,1), 1:size(sol,2), sol, st=:heatmap, color=:viridis)
     # end
 
 end
@@ -231,20 +235,25 @@ end
 function plot_intermediates()
     ps = deserialize("positions.bin")
     ints = []
-    for j=1:100:1001 
+    # Final positions: [-3.46019, 1.13722, 12.5033, 20.4116, 35.1203, 5.80054]
+    for j=1:10:101 
         append!(ints, [ps[j]])
     end
     
     i = 0
     for positions in ints
-        gm = create_2D_gaussian_matrix(xs,ys,positions)
-        display(plot(1:size(gm,1), 1:size(gm,2), gm, 
+        # gm = create_2D_gaussian_matrix(xs,ys,positions)
+        sol = predict(positions)[end]'
+        # mf(x,y) = sol[x,y]
+
+        display(plot(1:size(sol,1), 1:size(sol,2), sol, 
                 st=:heatmap, 
                 color=:viridis, 
                 title="Thermal Optimizer Iteration "*string(i*100), 
                 xlabel="x position (meters)", 
                 ylabel="y position (meters)"))
-        savefig("final_project/plots/thermal_2D_plots/thermal_2D_plot_"*string(i))
+        # plot_heatmap(sol')
+        savefig("final_project/plots/thermal_2D_plots/thermal_2D_plot_4C_"*string(i))
         i += 1
     end
 end
